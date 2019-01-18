@@ -1,0 +1,36 @@
+---
+ssh:
+  authorizedKeyFile: /home/avi/ssh/authorized_keys
+
+haproxyTemplateFile: haproxy.cfg.j2
+
+packageList:
+  - haproxy
+
+ifconfig:
+  - iface: ens33
+    cidr: 2.1.1.11/8
+  - iface: ens34
+    cidr: 172.16.1.11/24
+
+frontends:
+  - name: avivs
+    ip: 2.1.1.11
+    port: 80
+    backend: aviback
+
+
+backends:
+  - name: aviback
+    balance: roundrobin
+    servers:
+      - name: leader
+        ip: 172.16.1.4s
+        port: 80
+      # - name: web2
+      #   ip: 172.16.1.253
+      #   port: 80
+
+routes:
+  - cidr: 10.1.1.2/32
+    nexthop: 2.1.1.20

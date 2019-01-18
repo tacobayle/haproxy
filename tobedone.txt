@@ -1,0 +1,9 @@
+tbd: write a script to change dynamically the haproxy.cfg with the leader controller
+HTTP get of each node
+https://172.16.1.4/api/cluster/status
+if fails go to 2nd cluster IP:
+https://172.16.1.5/api/cluster/status
+if fails go to third cluster IP:
+https://172.16.1.5/api/cluster/status
+
+if any change, reload the haproxy config

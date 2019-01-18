@@ -1,0 +1,60 @@
+---
+- hosts: haproxy
+  gather_facts: no
+
+  vars_files:
+    - "vars/params.yml"
+
+  tasks:
+
+  - name: Create a directory
+    file:
+      path: .ssh
+      state: directory
+
+  - name: copy ssh keys for putty
+    copy:
+      src: "{{ ssh.authorizedKeyFile }}"
+      dest: .ssh/{{ ssh.authorizedKeyFile | basename }}
+    ignore_errors: yes
+
+  - name: Update repositories cache and install docker package
+    become: true
+    apt:
+      name: "{{ item }}"
+      update_cache: yes
+    ignore_errors: yes
+    loop: "{{ packageList }}"
+
+  - name: Upgrade all packages to the latest version
+    become: true
+    apt:
+      name: "*"
+      state: latest
+    ignore_errors: yes
+
+  - name: configure IPs
+    become: true
+    shell: |
+       ip address add {{ item.cidr }} dev {{ item.iface }}
+       ip link set {{ item.iface }} up
+    loop: "{{ ifconfig }}"
+
+  - name: Updating routing table
+    become: true
+    shell: |
+      ip route add {{ item.cidr }} via {{ item.nexthop }}
+    loop: "{{ routes }}"
+
+
+  - name: Create an haproxy config file
+    become: true
+    template:
+      src: "{{ haproxyTemplateFile }}"
+      dest: /etc/haproxy/haproxy.cfg
+
+  - name: restart haproxy
+    become: true
+    service:
+      name: haproxy
+      state: reloaded
