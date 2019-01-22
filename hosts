@@ -1,7 +1,7 @@
 ---
 all:
   children:
-    haproxy:
+    haproxy1:
       hosts:
         192.168.17.178:
 

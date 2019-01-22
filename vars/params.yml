@@ -6,27 +6,34 @@ haproxyTemplateFile: haproxy.cfg.j2
 
 packageList:
   - haproxy
+  - python3-yaml
 
 ifconfig:
   - iface: ens33
-    cidr: 2.1.1.11/8
+    cidr: 2.1.1.50/8
   - iface: ens34
     cidr: 172.16.1.11/24
 
+pythonScript: aviMonitor.py
+
+hostInventory: hostGcpPrivate
+
+defaultHaproxyConfig: haproxy.cfg
+
+
 frontends:
   - name: avivs
-    ip: 2.1.1.11
-    port: 80
+    ip: 2.1.1.50
+    port: 443
     backend: aviback
-
 
 backends:
   - name: aviback
-    balance: roundrobin
+    balance: first
     servers:
-      - name: leader
-        ip: 172.16.1.4s
-        port: 80
+      - name: aviavi
+        ip: 172.16.1.254
+        port: 443
       # - name: web2
       #   ip: 172.16.1.253
       #   port: 80

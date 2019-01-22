@@ -20,10 +20,8 @@ global
 
 defaults
 	log	global
-	mode    tcp
-	option  tcplog
-#	mode	http
-#	option	httplog
+	mode	http
+	option	httplog
 	option	dontlognull
         timeout connect 5000
         timeout client  50000
@@ -35,3 +33,12 @@ defaults
 	errorfile 502 /etc/haproxy/errors/502.http
 	errorfile 503 /etc/haproxy/errors/503.http
 	errorfile 504 /etc/haproxy/errors/504.http
+
+frontend avivs
+	bind 2.1.1.50:80
+	option forwardfor
+	default_backend aviback
+
+backend aviback
+	balance first
+	server aviavi 10.130.150.22:80

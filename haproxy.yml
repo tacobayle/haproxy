@@ -1,5 +1,5 @@
 ---
-- hosts: haproxy
+- hosts: haproxy1
   gather_facts: no
 
   vars_files:
@@ -7,18 +7,18 @@
 
   tasks:
 
-  - name: Create a directory
-    file:
-      path: .ssh
-      state: directory
+  # - name: Create a directory
+  #   file:
+  #     path: .ssh
+  #     state: directory
+  #
+  # - name: copy ssh keys for putty
+  #   copy:
+  #     src: "{{ ssh.authorizedKeyFile }}"
+  #     dest: .ssh/{{ ssh.authorizedKeyFile | basename }}
+  #   ignore_errors: yes
 
-  - name: copy ssh keys for putty
-    copy:
-      src: "{{ ssh.authorizedKeyFile }}"
-      dest: .ssh/{{ ssh.authorizedKeyFile | basename }}
-    ignore_errors: yes
-
-  - name: Update repositories cache and install docker package
+  - name: Update repositories cache and install packages
     become: true
     apt:
       name: "{{ item }}"
@@ -33,28 +33,54 @@
       state: latest
     ignore_errors: yes
 
-  - name: configure IPs
+  - name: copy python script
     become: true
-    shell: |
-       ip address add {{ item.cidr }} dev {{ item.iface }}
-       ip link set {{ item.iface }} up
-    loop: "{{ ifconfig }}"
+    copy:
+      src: "{{ pythonScript }}"
+      dest: "/etc/haproxy/{{ pythonScript }}"
 
-  - name: Updating routing table
+  - name: copy host inventory
     become: true
-    shell: |
-      ip route add {{ item.cidr }} via {{ item.nexthop }}
-    loop: "{{ routes }}"
+    copy:
+      src: "{{ hostInventory }}"
+      dest: "/etc/haproxy/hostAviController"
 
-
-  - name: Create an haproxy config file
+  - name: copy custom haproxy default config
     become: true
-    template:
-      src: "{{ haproxyTemplateFile }}"
-      dest: /etc/haproxy/haproxy.cfg
+    copy:
+      src: "{{ defaultHaproxyConfig }}"
+      dest: "/etc/haproxy/haproxy.cfg"
 
-  - name: restart haproxy
+  - name: Configure the crontab with the python script
     become: true
-    service:
-      name: haproxy
-      state: reloaded
+    cron:
+      name: "haproxy_check"
+      minute: "0-59"
+      job: "/usr/bin/python3 /etc/haproxy/aviMonitor.py > /dev/null"
+
+
+  # - name: configure IPs
+  #   become: true
+  #   shell: |
+  #      ip address add {{ item.cidr }} dev {{ item.iface }}
+  #      ip link set {{ item.iface }} up
+  #   loop: "{{ ifconfig }}"
+
+  # - name: Updating routing table
+  #   become: true
+  #   shell: |
+  #     ip route add {{ item.cidr }} via {{ item.nexthop }}
+  #   loop: "{{ routes }}"
+
+
+  # - name: Create an haproxy config file
+  #   become: true
+  #   template:
+  #     src: "{{ haproxyTemplateFile }}"
+  #     dest: /etc/haproxy/haproxy.cfg
+  #
+  # - name: restart haproxy
+  #   become: true
+  #   service:
+  #     name: haproxy
+  #     state: reloaded

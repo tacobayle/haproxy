@@ -1,3 +1,4 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
 global
 	log /dev/log	local0
 	log /dev/log	local1 notice
@@ -20,10 +21,8 @@ global
 
 defaults
 	log	global
-	mode    tcp
-	option  tcplog
-#	mode	http
-#	option	httplog
+	mode	http
+	option	httplog
 	option	dontlognull
         timeout connect 5000
         timeout client  50000
@@ -35,3 +34,18 @@ defaults
 	errorfile 502 /etc/haproxy/errors/502.http
 	errorfile 503 /etc/haproxy/errors/503.http
 	errorfile 504 /etc/haproxy/errors/504.http
+
+{% for frontend in frontends %}
+frontend {{ frontend.name }}
+	bind {{ frontend.ip }}:{{ frontend.port }}
+	option forwardfor
+	default_backend {{ frontend.backend }}
+{% endfor %}
+
+{% for backend in backends %}
+backend {{ backend.name }}
+	balance {{ backend.balance }}
+	{% for server in backend.servers %}
+	server {{ server.name }} {{ server.ip }}:{{ server.port }}
+	{% endfor %}
+{% endfor %}
