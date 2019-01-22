@@ -33,31 +33,44 @@
       state: latest
     ignore_errors: yes
 
-  - name: copy python script
+  - name: copy Multiples files
     become: true
     copy:
-      src: "{{ pythonScript }}"
-      dest: "/etc/haproxy/{{ pythonScript }}"
+      src: "{{ item.name }}"
+      dest: "{{ item.destPath}}/{{ item.name }}"
+    loop: "{{ filesToCopy }}"
 
-  - name: copy host inventory
+  - name: Create an haproxy config file
     become: true
-    copy:
-      src: "{{ hostInventory }}"
-      dest: "/etc/haproxy/hostAviController"
+    template:
+      src: "{{ haproxyTemplateFile }}"
+      dest: /etc/haproxy/haproxy.cfg
 
-  - name: copy custom haproxy default config
+  - name: restart haproxy
     become: true
-    copy:
-      src: "{{ defaultHaproxyConfig }}"
-      dest: "/etc/haproxy/haproxy.cfg"
-
-  - name: Configure the crontab with the python script
-    become: true
-    cron:
-      name: "haproxy_check"
-      minute: "0-59"
-      job: "/usr/bin/python3 /etc/haproxy/aviMonitor.py > /dev/null"
-
+    service:
+      name: haproxy
+      state: reloaded
+  #
+  # - name: copy host inventory
+  #   become: true
+  #   copy:
+  #     src: "{{ hostInventory }}"
+  #     dest: "/etc/haproxy/hostAviController"
+  #
+  # - name: copy custom haproxy default config
+  #   become: true
+  #   copy:
+  #     src: "{{ defaultHaproxyConfig }}"
+  #     dest: "/etc/haproxy/haproxy.cfg"
+  #
+  # - name: Configure the crontab with the python script
+  #   become: true
+  #   cron:
+  #     name: "haproxy_check"
+  #     minute: "0-59"
+  #     job: "/usr/bin/python3 /etc/haproxy/aviMonitor.py > /dev/null"
+  #
 
   # - name: configure IPs
   #   become: true
@@ -71,16 +84,3 @@
   #   shell: |
   #     ip route add {{ item.cidr }} via {{ item.nexthop }}
   #   loop: "{{ routes }}"
-
-
-  # - name: Create an haproxy config file
-  #   become: true
-  #   template:
-  #     src: "{{ haproxyTemplateFile }}"
-  #     dest: /etc/haproxy/haproxy.cfg
-  #
-  # - name: restart haproxy
-  #   become: true
-  #   service:
-  #     name: haproxy
-  #     state: reloaded

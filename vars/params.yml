@@ -1,43 +1,49 @@
 ---
-ssh:
-  authorizedKeyFile: /home/avi/ssh/authorized_keys
-
 haproxyTemplateFile: haproxy.cfg.j2
 
 packageList:
   - haproxy
-  - python3-yaml
 
-ifconfig:
-  - iface: ens33
-    cidr: 2.1.1.50/8
-  - iface: ens34
-    cidr: 172.16.1.11/24
-
-pythonScript: aviMonitor.py
-
-hostInventory: hostGcpPrivate
-
-defaultHaproxyConfig: haproxy.cfg
-
+filesToCopy:
+  - name: healthMonitor.sh
+    destPath: /tmp
+  - name: healthMonitor.py
+    destPath: /tmp
 
 frontends:
   - name: avivs
     ip: 2.1.1.50
     port: 443
     backend: aviback
+    mode: tcp
 
 backends:
   - name: aviback
     balance: first
     servers:
-      - name: aviavi
-        ip: 172.16.1.254
+      - name: avi1
+        ip: 172.16.1.18
         port: 443
-      # - name: web2
-      #   ip: 172.16.1.253
-      #   port: 80
+      - name: avi2
+        ip: 172.16.1.19
+        port: 80
+      - name: avi3
+        ip: 172.16.1.20
+        port: 80
 
-routes:
-  - cidr: 10.1.1.2/32
-    nexthop: 2.1.1.20
+# routes:
+#   - cidr: 10.1.1.2/32
+#     nexthop: 2.1.1.20
+
+
+# ifconfig:
+#   - iface: ens33
+#     cidr: 2.1.1.50/8
+#   - iface: ens34
+#     cidr: 172.16.1.11/24
+
+# pythonScript: aviMonitor.py
+
+# hostInventory: hostGcpPrivate
+#
+# defaultHaproxyConfig: haproxy.cfg

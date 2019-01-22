@@ -2,12 +2,15 @@
 global
 	log /dev/log	local0
 	log /dev/log	local1 notice
-	chroot /var/lib/haproxy
+	# chroot /var/lib/haproxy
 	stats socket /run/haproxy/admin.sock mode 660 level admin
 	stats timeout 30s
-	user haproxy
-	group haproxy
+	# user haproxy
+	# group haproxy
+	user root
+	group root
 	daemon
+  external-check
 
 	# Default SSL material locations
 	ca-base /etc/ssl/certs
@@ -16,13 +19,15 @@ global
 	# Default ciphers to use on SSL-enabled listening sockets.
 	# For more information, see ciphers(1SSL). This list is from:
 	#  https://hynek.me/articles/hardening-your-web-servers-ssl-ciphers/
-	ssl-default-bind-ciphers ECDH+AESGCM:DH+AESGCM:ECDH+AES256:DH+AES256:ECDH+AES128:DH+AES:ECDH+3DES:DH+3DES:RSA+AESGCM:RSA+AES:RSA+3DES:!aNULL:!MD5:!DSS
+	ssl-default-bind-ciphers ECDH+AESGCM:DH+AESGCM:ECDH+ AES256:DH+AES256:ECDH+AES128:DH+AES:ECDH+3DES:DH+3DES:RSA+AESGCM:RSA+AES:RSA+3DES:!aNULL:!MD5:!DSS
 	ssl-default-bind-options no-sslv3
 
 defaults
 	log	global
-	mode	http
-	option	httplog
+	mode    tcp
+	option  tcplog
+	# mode	http
+	# option	httplog
 	option	dontlognull
         timeout connect 5000
         timeout client  50000
@@ -38,14 +43,17 @@ defaults
 {% for frontend in frontends %}
 frontend {{ frontend.name }}
 	bind {{ frontend.ip }}:{{ frontend.port }}
-	option forwardfor
+	mode {{ frontend.mode }}
 	default_backend {{ frontend.backend }}
 {% endfor %}
 
 {% for backend in backends %}
 backend {{ backend.name }}
 	balance {{ backend.balance }}
+	option external-check
+	external-check path "/usr/bin:/bin:/tmp"
+	external-check command /tmp/healthmonitor.sh
 	{% for server in backend.servers %}
-	server {{ server.name }} {{ server.ip }}:{{ server.port }}
+	server {{ server.name }} {{ server.ip }}:{{ server.port }} check inter 10s fall 1 rise 1
 	{% endfor %}
 {% endfor %}
