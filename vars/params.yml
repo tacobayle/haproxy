@@ -1,18 +1,22 @@
 ---
 haproxyTemplateFile: haproxy.cfg.j2
 
+backendInventory: hostGcpPrivate
+
 packageList:
   - haproxy
 
 filesToCopy:
   - name: healthMonitor.sh
     destPath: /tmp
+    mode: u=rwx
   - name: healthMonitor.py
     destPath: /tmp
+    mode: u=rwx,g=r,o=r
 
 frontends:
   - name: avivs
-    ip: 2.1.1.50
+    # ip: 2.1.1.50
     port: 443
     backend: aviback
     mode: tcp
@@ -22,14 +26,14 @@ backends:
     balance: first
     servers:
       - name: avi1
-        ip: 172.16.1.18
+        ip: 172.16.1.33
         port: 443
       - name: avi2
-        ip: 172.16.1.19
-        port: 80
+        ip: 172.16.1.34
+        port: 443
       - name: avi3
-        ip: 172.16.1.20
-        port: 80
+        ip: 172.16.1.35
+        port: 443
 
 # routes:
 #   - cidr: 10.1.1.2/32

@@ -38,7 +38,23 @@
     copy:
       src: "{{ item.name }}"
       dest: "{{ item.destPath}}/{{ item.name }}"
+      mode: "{{ item.mode }}"
     loop: "{{ filesToCopy }}"
+
+  - name: Register the main IP (where the default gw resides)
+    become: true
+    shell: |
+      ifPrimary=`ip route | grep default | sed -e "s/^.*dev.//" -e "s/.proto.*//"`
+      ip=$(ifconfig $ifPrimary | grep 'inet addr' | awk -F: '{print $2}' | awk '{print $1}')
+      echo $ip
+    register: mainIp
+
+  - name: Retrieve backend servers IP
+    command: "python3 retrieveBackendIp.py {{ backendInventory }}"
+    delegate_to: 127.0.0.1
+    register: stringBackend
+
+  - debug: var=stringBackend.stdout_lines
 
   - name: Create an haproxy config file
     become: true

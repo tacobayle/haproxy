@@ -1,0 +1,16 @@
+---
+all:
+  hosts:
+    jump1:
+      ansible_host: 35.246.114.239
+    controller1:
+      ansible_host: 35.197.245.124
+    controller2:
+      ansible_host: 35.189.90.93
+    controller3:
+      ansible_host: 35.242.138.76
+    haproxy1:
+      ansible_host: 35.242.133.183
+  vars:
+    ansible_user: "avi"
+    ansible_ssh_private_key_file: "/home/avi/.ssh/id_rsa"
